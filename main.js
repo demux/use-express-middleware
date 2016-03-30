@@ -6,17 +6,15 @@ var MockExpressRequest = require('mock-express-request')
 var MockExpressResponse = require('mock-express-response')
 
 
-function deepstreamPassport(session, props) {
-  var user = null
+module.exports = function deepstreamExpress(middleware, props) {
+  var scope = {}
 
   return {
     isValidUser: function(connectionData, authData, callback) {
       var req = new MockExpressRequest({
         method: 'GET',
         url: '/',
-        headers: {
-          Cookie: connectionData.headers.cookie
-        }
+        headers: connectionData.headers
       })
       var res = new MockExpressResponse({request: req})
 
@@ -28,38 +26,16 @@ function deepstreamPassport(session, props) {
         })
       }
 
-      return use(session).then(function() {
-        return use(passport.initialize())
-
-      }).then(function() {
-        return use(passport.session())
-
-      }).then(function() {
-        user = req.user
+      return Promise.each([].concat(middleware), use).then(function() {
+        scope.req = req
+        scope.res = res
 
         if(props.isValidUser !== undefined) {
-          return props.isValidUser(user, callback)
+          return props.isValidUser.call(scope, connectionData, authData, callback)
         }
-
-        if(user) {
-          return callback(null, user.id)
-        }
-
-        return callback(null, 'anon')
       })
     },
-
-    canPerformAction: function(id, message, callback) {
-      props.canPerformAction(user, callback)
-    },
-
-    onClientDisconnect: function(user) {
-      if(typeof props.onClientDisconnect !== 'undefined') {
-        props.onClientDisconnect(user)
-      }
-    }
+    canPerformAction: props.canPerformAction ? props.canPerformAction.bind(scope) : undefined,
+    onClientDisconnect: props.onClientDisconnect ? props.onClientDisconnect.bind(scope) : undefined
   }
 }
-
-
-module.exports = deepstreamPassport
