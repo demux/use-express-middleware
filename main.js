@@ -16,6 +16,21 @@ module.exports = function deepstreamExpress(middleware, props) {
       })
       var res = new MockExpressResponse({request: req})
 
+      // Setup sequence:
+      var fnSeq = [].concat(middleware).map(function(fn, i) {
+        return function(err) {
+          if(err) {return middlewareError(err)}
+          fn(req, res, fnSeq[i+1] || allMiddlewareLoaded)
+        }
+      })
+
+      function middlewareError(err) {
+        if(props.isValidUser !== undefined) {
+          return props.catchMiddlewareError(err)
+        }
+        throw err
+      }
+
       function allMiddlewareLoaded() {
         scope.req = req
         scope.res = res
@@ -24,17 +39,6 @@ module.exports = function deepstreamExpress(middleware, props) {
           return props.isValidUser.call(scope, connectionData, authData, callback)
         }
       }
-
-      // Setup sequence:
-      var fnSeq = [].concat(middleware).map(function(fn, i) {
-        return function() {
-          var next = fnSeq[i+1] || allMiddlewareLoaded
-          fn(req, res, function(err) {
-            if(err) {throw err}
-            next()
-          })
-        }
-      })
 
       // Init sequence:
       fnSeq[0]()
