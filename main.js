@@ -5,11 +5,13 @@ var MockExpressResponse = require('mock-express-response')
 
 
 module.exports = function deepstreamExpress(middleware, isValidUser, catchMiddlewareError) {
-  return function(connectionData, authData, callback) {
+  return function(connData, authData, callback) {
+    var self = this
+
     var req = new MockExpressRequest({
       method: 'GET',
       url: '/',
-      headers: connectionData.headers
+      headers: connData.headers
     })
     var res = new MockExpressResponse({request: req})
 
@@ -23,19 +25,15 @@ module.exports = function deepstreamExpress(middleware, isValidUser, catchMiddle
 
     function middlewareError(err) {
       if(catchMiddlewareError !== undefined) {
-        return catchMiddlewareError(err)
+        return catchMiddlewareError.call(self, err)
       }
       throw err
     }
 
     function allMiddlewareLoaded() {
-      if(isValidUser !== undefined) {
-        var scope = {
-          req: req,
-          res: res
-        }
-        return isValidUser.call(scope, connectionData, authData, callback)
-      }
+      connData.req = req
+      connData.res = res
+      return isValidUser.call(self, connData, authData, callback)
     }
 
     // Init sequence:
