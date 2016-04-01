@@ -4,46 +4,41 @@ var MockExpressRequest = require('mock-express-request')
 var MockExpressResponse = require('mock-express-response')
 
 
-module.exports = function deepstreamExpress(props) {
-  var scope = {}
+module.exports = function deepstreamExpress(middleware, isValidUser, catchMiddlewareError) {
+  return function(connectionData, authData, callback) {
+    var req = new MockExpressRequest({
+      method: 'GET',
+      url: '/',
+      headers: connectionData.headers
+    })
+    var res = new MockExpressResponse({request: req})
 
-  return {
-    isValidUser: function(connectionData, authData, callback) {
-      var req = new MockExpressRequest({
-        method: 'GET',
-        url: '/',
-        headers: connectionData.headers
-      })
-      var res = new MockExpressResponse({request: req})
-
-      // Setup sequence:
-      var fnSeq = [].concat(props.middleware).map(function(fn, i) {
-        return function(err) {
-          if(err) {return middlewareError(err)}
-          fn(req, res, fnSeq[i+1] || allMiddlewareLoaded)
-        }
-      })
-
-      function middlewareError(err) {
-        if(props.isValidUser !== undefined) {
-          return props.catchMiddlewareError(err)
-        }
-        throw err
+    // Setup sequence:
+    var fnSeq = [].concat(middleware).map(function(fn, i) {
+      return function(err) {
+        if(err) {return middlewareError(err)}
+        fn(req, res, fnSeq[i+1] || allMiddlewareLoaded)
       }
+    })
 
-      function allMiddlewareLoaded() {
-        scope.req = req
-        scope.res = res
-
-        if(props.isValidUser !== undefined) {
-          return props.isValidUser.call(scope, connectionData, authData, callback)
-        }
+    function middlewareError(err) {
+      if(catchMiddlewareError !== undefined) {
+        return catchMiddlewareError(err)
       }
+      throw err
+    }
 
-      // Init sequence:
-      fnSeq[0]()
-    },
-    canPerformAction: props.canPerformAction ? props.canPerformAction.bind(scope) : undefined,
-    onClientDisconnect: props.onClientDisconnect ? props.onClientDisconnect.bind(scope) : undefined
+    function allMiddlewareLoaded() {
+      if(isValidUser !== undefined) {
+        var scope = {
+          req: req,
+          res: res
+        }
+        return isValidUser.call(scope, connectionData, authData, callback)
+      }
+    }
+
+    // Init sequence:
+    fnSeq[0]()
   }
 }
