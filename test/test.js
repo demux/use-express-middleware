@@ -13,6 +13,28 @@ import headers from './headers'
 
 const FileStore = sessionFileStore(expressSession)
 
+const session = expressSession({
+  store: new FileStore({
+    path: path.join(__dirname, 'sessions'),
+  }),
+  secret: '60dd06aa-cf8e-4cf8-8925-6de720015ebf',
+  resave: false,
+  saveUninitialized: false,
+  name: 'sid',
+  cookie: {
+    secure: false,
+    maxAge: 2147483647  // Never expire
+  },
+})
+
+
+describe('session middleware', () => {
+  it('should get SessionID', async (done) => {
+    const {req, res} = await useExpressMiddleware(headers, session)
+    assert(req.sessionID === 'VfIvWVttCoYPwMmGLgV3rfQWIphmgixz')
+    done()
+  })
+})
 
 describe('Passport', () => {
   const user = {
@@ -28,31 +50,12 @@ describe('Passport', () => {
     done(null, id === user.id ? user : null)
   })
 
-  describe('Session Middleware', () => {
-    const session = expressSession({
-      store: new FileStore({
-        path: path.join(__dirname, 'sessions'),
-      }),
-      secret: '60dd06aa-cf8e-4cf8-8925-6de720015ebf',
-      resave: false,
-      saveUninitialized: false,
-      name: 'sid',
-      cookie: {
-        secure: false,
-        maxAge: 2147483647  // Never expire
-      },
-    })
-
+  describe('passport.session() middleware', () => {
     const middleware = [session, passport.initialize(), passport.session()]
 
     it('should get the logged in user from session', async (done) => {
-      console.log(headers)
       const {req, res} = await useExpressMiddleware(headers, middleware)
-      console.log(req)
-
-      assert(req.sessionID === 'VfIvWVttCoYPwMmGLgV3rfQWIphmgixz')
       assert(req.user.id === user.id)
-
       done()
     })
   })
