@@ -1,0 +1,12 @@
+{
+  "host": "localhost:3000",
+  "connection": "keep-alive",
+  "pragma": "no-cache",
+  "cache-control": "no-cache",
+  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.110 Safari/537.36",
+  "accept": "*/*",
+  "referer": "http://localhost:3000/",
+  "accept-encoding": "gzip, deflate, sdch",
+  "accept-language": "en-US,en;q=0.8,is;q=0.6,sv;q=0.4",
+  "cookie": "sid=s%3AVfIvWVttCoYPwMmGLgV3rfQWIphmgixz.iyp9rnmbpQxhW7n3qLnoLETnmgNhw8CbEbt2vESBogo"
+}

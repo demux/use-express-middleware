@@ -1,0 +1,12 @@
+{
+  "presets": ["es2015", "stage-0"],
+  "plugins": [
+    "add-module-exports",
+    "syntax-trailing-function-commas",
+    "transform-decorators-legacy",
+    ["transform-async-to-module-method", {
+      "module": "bluebird",
+      "method": "coroutine"
+    }]
+  ]
+}
