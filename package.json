@@ -4,7 +4,7 @@
   "description": "Passport Session Authentication for Deepstream.io",
   "main": "main.js",
   "scripts": {
-    "test": "mocha --compilers js:babel-register"
+    "test": "mocha --compilers js:babel-register --require babel-polyfill"
   },
   "repository": {
     "type": "git",

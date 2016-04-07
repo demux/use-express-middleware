@@ -1,5 +1,3 @@
-import 'babel-polyfill'
-
 import path from 'path'
 import assert from 'assert'
 import expressSession from 'express-session'
@@ -29,10 +27,21 @@ const session = expressSession({
 
 
 describe('session middleware', () => {
-  it('should get SessionID', async (done) => {
-    const {req, res} = await useExpressMiddleware(headers, session)
-    assert(req.sessionID === 'VfIvWVttCoYPwMmGLgV3rfQWIphmgixz')
-    done()
+  describe('Callback', () => {
+    it('should get SessionID', async (done) => {
+      useExpressMiddleware(headers, session, (req, res) => {
+        assert(req.sessionID === 'VfIvWVttCoYPwMmGLgV3rfQWIphmgixz')
+        done()
+      })
+    })
+  })
+
+  describe('Promise', () => {
+    it('should get SessionID', async (done) => {
+      const {req, res} = await useExpressMiddleware(headers, session)
+      assert(req.sessionID === 'VfIvWVttCoYPwMmGLgV3rfQWIphmgixz')
+      done()
+    })
   })
 })
 
@@ -51,12 +60,24 @@ describe('Passport', () => {
   })
 
   describe('passport.session() middleware', () => {
+
     const middleware = [session, passport.initialize(), passport.session()]
 
-    it('should get the logged in user from session', async (done) => {
-      const {req, res} = await useExpressMiddleware(headers, middleware)
-      assert(req.user.id === user.id)
-      done()
+    describe('Callback', () => {
+      it('should get the logged in user from session', (done) => {
+        useExpressMiddleware(headers, middleware, (req, res) => {
+          assert(req.user.id === user.id)
+          done()
+        })
+      })
+    })
+
+    describe('Promise', () => {
+      it('should get the logged in user from session', async (done) => {
+        const {req, res} = await useExpressMiddleware(headers, middleware)
+        assert(req.user.id === user.id)
+        done()
+      })
     })
   })
 
