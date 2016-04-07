@@ -12,18 +12,16 @@ module.exports = function useExpressMiddleware(headers, middleware, callback) {
   })
   var res = new MockExpressResponse({request: req})
 
-  var fnSeq = [].concat(middleware).reduceRight(function(next, fn) {
-    return function() {fn(req, res, next)}
-  }, function() {
-    callback(req, res)
-  })
+  var fnSeq = [].concat(middleware).reduceRight(function (next, fn) {
+    return function () {fn(req, res, next)}
+  }, function () {callback(req, res)})
 
   if(callback) {
     fnSeq()
   } else {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       try {
-        callback = function(req, res) {
+        callback = function (req, res) {
           resolve({req, res})
         }
         fnSeq()
