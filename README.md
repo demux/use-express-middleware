@@ -1,10 +1,21 @@
-# deepstream-passport
+# use-express-middleware
+
+The main purpose of this module is to use `express` middleware for
+authentication in `deepstream.io`.
+
+If you find other uses for this module, please let me know.
 
 ## Install:
 
 ```bash
 npm install use-express-middleware --save
 ```
+
+## Tested Middleware:
+
+    ✓ express-session
+    ✓ passport.initialize()
+    ✓ passport.session()
 
 ## Usage:
 
@@ -63,3 +74,7 @@ server.set('permissionHandler', {
   ...
 })
 ```
+
+## How does this work?
+
+### TODO
