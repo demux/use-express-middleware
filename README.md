@@ -3,15 +3,18 @@
 ## Install:
 
 ```bash
-npm install deepstream-passport --save
+npm install use-express-middleware --save
 ```
 
 ## Usage:
 
+### Deepstream passport authentication:
+
 ```javascript
 import Deepstream from 'deepstream.io'
-import deepstreamPassport from 'deepstream-passport'
+import useExpressMiddleware from 'use-express-middleware'
 import expressSession from 'express-session'
+import passport from 'passport'
 
 const server = new Deepstream()
 
@@ -24,25 +27,39 @@ const session = expressSession({
   ...options
 })
 
-// Basic:
-server.set('permissionHandler', deepstreamPassport(session, {
-  canPerformAction(user, callback) {
+const middleware = [session, passport.initialize(), passport.session()]
+
+// Using a callback:
+server.set('permissionHandler', {
+  isValidUser(connectionData, authData, callback) {
+    useExpressMiddleware(connectionData.headers, middleware, (req, res) => {
+      if(req.user) {
+        callback(null, req.user.id)
+      } else {
+        callback(null, 'open')
+      }
+    })
+  },
+
+  canPerformAction(id, message, callback) {
+    const user = getUserFromId(id)  // pseudo code
+
     callback(null, user.isAdmin)
   }
-}))
+})
 
-// Custom `isValidUser`:
-server.set('permissionHandler', deepstreamPassport(session, {
-  isValidUser: (user, callback) => {
-    if(user) {
-      callback(null, user.id)
+// Using promises and async/await:
+server.set('permissionHandler', {
+  isValidUser: async (connectionData, authData, callback) => {
+    const {req, res} = await useExpressMiddleware(connectionData.headers, middleware)
+
+    if(req.user) {
+      callback(null, req.user.id)
     } else {
       callback(null, 'open')
     }
   },
 
-  canPerformAction(user, callback) {
-    callback(null, user.isAdmin)
-  }
-}))
+  ...
+})
 ```
